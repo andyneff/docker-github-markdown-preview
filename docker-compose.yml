@@ -1,0 +1,14 @@
+version: '3.2'
+
+services:
+  github-markdown-preview:
+    image:
+      andyneff/github-markdown-preview
+    build:
+      context: .
+    volumes:
+      - ${SRC_DIR}:/src:ro
+      - ${OUT_DIR}:/out
+    environment:
+      - DOCKER_USER_ID=${USER_ID}
+      - DOCKER_GROUP_ID=${GROUP_ID}

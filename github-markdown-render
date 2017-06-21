@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+require 'github-markdown-preview'
+require 'optparse'
+
+options = { :delete_on_exit => false, :comment_mode => false }
+output_dir = false
+opt_parser = OptionParser.new do |opt|
+  opt.banner = "Usage: github-markdown-preview PATH_TO_MD_FILE"
+  opt.separator  ""
+  opt.separator  "Options"
+
+  opt.on("-c", "--comment-mode", "renders a preview for Github comments/issues") do
+    options[:comment_mode] = true
+  end
+
+  # opt.on("-d", "--delete-on-exit", "delete the preview when the program exits") do
+  #   options[:delete_on_exit] = true
+  # end
+
+  # opt.on("-o", "--output OUTPUT_FILE", "write preview to the given filename, rather than the default 'source_file.md.html'") do |output|
+  #   options[:preview_file] = output
+  # end
+
+  opt.on("-o", "--output OUTPUT_DIR", "write preview to the given directory, rather than the same directory") do |output|
+    output_dir = output
+  end
+
+
+  opt.on("-v", "--version", "print the version") do
+    $stdout.puts 'github-markdown-preview version ' + GithubMarkdownPreview::VERSION
+    Kernel.exit
+  end
+end
+
+opt_parser.parse!
+
+unless ARGV.count == 1
+  $stdout.puts opt_parser
+  exit 1
+end
+
+Dir.foreach(ARGV.at(0)) do |source_file|
+  ext = File.extname(source_file)
+  next if ext != '.md'
+
+  if output_dir
+    options[:preview_file] = File.join(output_dir, File.basename(source_file, ext))+".md.html"
+  end
+
+  begin
+    # source_file = ARGV.at(0)
+    preview = GithubMarkdownPreview::HtmlPreview.new(source_file, options)
+    $stdout.puts "Rendered #{preview.preview_file}"
+  rescue GithubMarkdownPreview::FileNotFoundError
+    $stderr.puts "#{source_file}: No such file"
+    exit 1
+  end
+end
+# if $stdout.isatty
+#   $stdout.puts "Preview available at file://#{preview.preview_file}"
+# else
+#   $stdout.puts preview.preview_file
+# end
+
+# if options[:delete_on_exit]
+#   # make sure we've said what we have to say before we block watching the file
+#   $stdout.flush
+
+#   # now watch for changes, blocking until we get killed
+#   begin
+#     preview.watch!
+#   rescue Interrupt
+#     # swallow this so we don't print junk to the user's terminal
+#   end
+# end
